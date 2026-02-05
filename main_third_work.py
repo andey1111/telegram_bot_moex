@@ -30,8 +30,12 @@ from aiogram.types import (
     ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton,
     BufferedInputFile
 )
-BOT_TOKEN = "8410065655:AAEIs9YXzlXZtxuSmCjAtkVNGVj5bLQ6uiA"
+from dotenv import load_dotenv
+import os
 
+load_dotenv()  
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # =========================
 # КОНФИГУРАЦИЯ
