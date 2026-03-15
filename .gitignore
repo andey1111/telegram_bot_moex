@@ -1,17 +1,13 @@
+# Секреты
 .env
-*.env
-*.env.local
-*.env.*
-config_secrets.py
-token.txt
 
+# База данных
+alerts.db
 *.db
 *.sqlite
-*.sqlite3
-alerts.db         
 
+# Python
 __pycache__/
-*.py[cod]
 *.pyc
 *.pyo
 *.pyd
@@ -20,15 +16,26 @@ __pycache__/
 dist/
 build/
 
-.venv/
+# Виртуальное окружение
 venv/
+.venv/
 env/
-ENV/
+.env/
 
-.vscode/
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
 .idea/
+.vscode/
 *.swp
 *.swo
 
-.DS_Store
-Thumbs.db
+# Логи
+*.log
+
+# Временные файлы
+*.tmp
+*.temp
