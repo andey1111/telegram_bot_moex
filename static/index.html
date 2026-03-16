@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOEX Анализатор</title>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:    #0d1117; --bg2: #161b22; --bg3: #21262d;
+  --border: #30363d; --text: #e6edf3; --text2: #8b949e; --text3: #484f58;
+  --blue: #1f6feb; --green: #26a69a; --red: #ef5350;
+  --btn-bg: #21262d; --btn-hover: #30363d;
+  --btn-active: #1f6feb; --btn-active-text: #fff;
+}
+body.light {
+  --bg: #fff; --bg2: #f6f8fa; --bg3: #eaeef2;
+  --border: #d0d7de; --text: #1f2328; --text2: #57606a; --text3: #6e7781;
+  --btn-bg: #eaeef2; --btn-hover: #d0d7de;
+  --btn-active: #0969da; --btn-active-text: #fff;
+  --green: #1a7f64; --red: #cf222e;
+}
+
+body {
+  background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh; display: flex; flex-direction: column;
+  transition: background .2s, color .2s;
+}
+
+/* ── HEADER ── */
+.header {
+  padding: 14px 24px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+}
+.logo { font-size: 20px; font-weight: 700; color: var(--text); }
+.logo span { color: var(--blue); }
+
+/* ── SEARCH BAR ── */
+.search-bar {
+  padding: 16px 24px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+}
+.input {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color .15s;
+}
+.input:focus { border-color: var(--blue); }
+.input-ticker { width: 120px; text-transform: uppercase; }
+.input-metric { width: 200px; }
+.input-date   { width: 130px; }
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--btn-bg);
+  color: var(--text2);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+}
+.btn:hover  { background: var(--btn-hover); color: var(--text); }
+.btn.primary { background: var(--blue); color: #fff; border-color: transparent; }
+.btn.primary:hover { background: #388bfd; }
+.btn.active { background: var(--btn-active); color: var(--btn-active-text); border-color: transparent; }
+.btn.icon   { padding: 8px 10px; }
+
+/* ── TICKER INFO ── */
+.ticker-info {
+  padding: 12px 24px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: none; align-items: center; gap: 20px; flex-wrap: wrap;
+}
+.ticker-info.visible { display: flex; }
+.ti-ticker { font-size: 22px; font-weight: 700; }
+.ti-price  { font-size: 20px; font-weight: 600; }
+.ti-change { font-size: 14px; }
+.ti-meta   { font-size: 12px; color: var(--text2); }
+.badge {
+  background: var(--blue); color: #fff;
+  padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+}
+
+/* ── TOOLBAR ── */
+.toolbar {
+  padding: 8px 24px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: none; align-items: center; flex-wrap: wrap; gap: 6px;
+}
+.toolbar.visible { display: flex; }
+.toolbar-group { display: flex; gap: 3px; align-items: center; }
+.toolbar-sep   { width: 1px; height: 20px; background: var(--border); margin: 0 6px; }
+.toolbar-label { font-size: 11px; color: var(--text2); margin-right: 2px; }
+
+/* ── CHARTS AREA ── */
+.charts-area {
+  flex: 1; display: flex; flex-direction: column;
+  position: relative; min-height: 0;
+}
+#chart-price     { flex: 3; min-height: 300px; }
+#chart-volume    { flex: 1; min-height: 80px;  border-top: 1px solid var(--border); }
+#chart-indicator { min-height: 150px; border-top: 1px solid var(--border); display: none; }
+
+/* ── LOADING / ERROR ── */
+.overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); z-index: 10; flex-direction: column; gap: 12px;
+}
+.overlay.hidden { display: none; }
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.overlay-text { font-size: 14px; color: var(--text2); }
+.error-msg { color: var(--red); font-size: 14px; text-align: center; max-width: 400px; }
+
+/* ── TOOLTIP ── */
+#tooltip {
+  position: fixed; top: 0; left: 0;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px;
+  font-size: 12px; color: var(--text);
+  pointer-events: none; opacity: 0; transition: opacity .1s;
+  z-index: 100; min-width: 160px; line-height: 1.7;
+}
+#tooltip.visible { opacity: 1; }
+#tooltip .tt-date  { color: var(--text2); font-size: 11px; margin-bottom: 4px; }
+#tooltip .tt-row   { display: flex; justify-content: space-between; gap: 12px; }
+#tooltip .tt-label { color: var(--text2); }
+#tooltip .tt-up    { color: var(--green); font-weight: 600; }
+#tooltip .tt-down  { color: var(--red);   font-weight: 600; }
+
+/* ── FOOTER ── */
+.footer {
+  padding: 8px 24px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--text3); text-align: center;
+}
+
+/* ── INDICATOR VALUES ── */
+.ind-values {
+  padding: 6px 24px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: none; gap: 16px; flex-wrap: wrap; font-size: 12px;
+}
+.ind-values.visible { display: flex; }
+.ind-val-item { display: flex; gap: 6px; align-items: center; }
+.ind-val-dot  { width: 8px; height: 8px; border-radius: 50%; }
+.ind-val-name { color: var(--text2); }
+.ind-val-num  { font-weight: 600; }
+
+/* ── QUICK EXAMPLES ── */
+.examples {
+  padding: 8px 24px;
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+}
+.examples-label { font-size: 12px; color: var(--text2); margin-right: 4px; }
+.example-btn {
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--btn-bg);
+  color: var(--text2);
+  font-size: 12px;
+  cursor: pointer;
+}
+.example-btn:hover { background: var(--btn-hover); color: var(--text); }
+
+/* ── DRAWING ── */
+.draw-hint {
+  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+  background: rgba(31,107,235,0.9); color: #fff;
+  padding: 6px 16px; border-radius: 20px; font-size: 12px;
+  pointer-events: none; display: none; z-index: 20;
+}
+.draw-hint.visible { display: block; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">📈 MOEX <span>Анализатор</span></div>
+  <div style="display:flex;gap:6px;align-items:center">
+    <button class="btn icon" onclick="toggleTheme()" title="Тема">🌗</button>
+  </div>
+</div>
+
+<!-- SEARCH BAR -->
+<div class="search-bar">
+  <input class="input input-ticker" id="inp-ticker" placeholder="SBER" maxlength="10"
+         onkeydown="if(event.key==='Enter')loadChart()">
+  <input class="input input-metric" id="inp-metric" placeholder="Индикатор: rsi 14, sma 50..."
+         onkeydown="if(event.key==='Enter')loadChart()">
+  <input class="input input-date" id="inp-start" placeholder="01.01.2024" maxlength="10">
+  <input class="input input-date" id="inp-end"   placeholder="31.12.2024" maxlength="10">
+  <button class="btn primary" onclick="loadChart()">📊 Построить</button>
+  <button class="btn" onclick="clearChart()">✕ Сброс</button>
+</div>
+
+<!-- QUICK EXAMPLES -->
+<div class="examples">
+  <span class="examples-label">Примеры:</span>
+  <button class="example-btn" onclick="quickLoad('SBER','')">SBER цена</button>
+  <button class="example-btn" onclick="quickLoad('SBER','rsi 14')">SBER RSI 14</button>
+  <button class="example-btn" onclick="quickLoad('GAZP','sma 50')">GAZP SMA 50</button>
+  <button class="example-btn" onclick="quickLoad('YNDX','macd 12 26 9')">YNDX MACD</button>
+  <button class="example-btn" onclick="quickLoad('VTBR','bbands 20 2')">VTBR BBands</button>
+  <button class="example-btn" onclick="quickLoad('ROSN','stoch')">ROSN Stoch</button>
+</div>
+
+<!-- TICKER INFO -->
+<div class="ticker-info" id="ticker-info">
+  <span class="ti-ticker" id="ti-ticker">—</span>
+  <span id="ti-badge"></span>
+  <span class="ti-price"  id="ti-price">—</span>
+  <span class="ti-change" id="ti-change">—</span>
+  <span class="ti-meta"   id="ti-meta">—</span>
+</div>
+
+<!-- INDICATOR VALUES -->
+<div class="ind-values" id="ind-values"></div>
+
+<!-- TOOLBAR -->
+<div class="toolbar" id="toolbar">
+  <div class="toolbar-group">
+    <span class="toolbar-label">Тип:</span>
+    <button class="btn active type-btn" onclick="setType('candlestick',this)">Свечи</button>
+    <button class="btn type-btn"        onclick="setType('line',this)">Линия</button>
+    <button class="btn type-btn"        onclick="setType('area',this)">Area</button>
+    <button class="btn type-btn"        onclick="setType('bar',this)">Бары</button>
+  </div>
+  <div class="toolbar-sep"></div>
+  <div class="toolbar-group">
+    <span class="toolbar-label">Период:</span>
+    <button class="btn period-btn" onclick="setPeriod(30,this)">1М</button>
+    <button class="btn period-btn" onclick="setPeriod(90,this)">3М</button>
+    <button class="btn period-btn" onclick="setPeriod(180,this)">6М</button>
+    <button class="btn period-btn" onclick="setPeriod(365,this)">1Г</button>
+    <button class="btn period-btn active" onclick="setPeriod(0,this)">Всё</button>
+  </div>
+  <div class="toolbar-sep"></div>
+  <div class="toolbar-group" id="ind-toggles"></div>
+  <div class="toolbar-sep" id="ind-sep" style="display:none"></div>
+  <div class="toolbar-group">
+    <button class="btn active" id="btn-vol" onclick="toggleVolume(this)">📊 Объём</button>
+  </div>
+  <div class="toolbar-sep"></div>
+  <div class="toolbar-group">
+    <button class="btn" id="btn-draw" onclick="toggleDraw(this)">✏️ Линия</button>
+    <button class="btn" onclick="undoLine()">↩️</button>
+    <button class="btn" onclick="clearLines()">🗑️</button>
+  </div>
+</div>
+
+<!-- CHARTS -->
+<div class="charts-area" id="charts-area">
+  <div id="chart-price"></div>
+  <div id="chart-volume"></div>
+  <div id="chart-indicator"></div>
+  <div class="overlay" id="overlay">
+    <div style="font-size:48px">📈</div>
+    <div class="overlay-text">Введите тикер и нажмите «Построить»</div>
+  </div>
+  <div class="draw-hint" id="draw-hint">✏️ Кликните первую точку на графике</div>
+</div>
+
+<div id="tooltip"></div>
+<div class="footer">Данные Московской биржи (MOEX ISS) · <span id="footer-period"></span></div>
+
+<script>
+const API = '';  // пустая строка = тот же хост
+
+// ── Состояние ────────────────────────────────────────────
+let allCandles  = [];
+let allVolumes  = [];
+let indData     = {};
+let isOverlay   = false;
+let currentType = 'candlestick';
+let charts      = [];
+let chartEls    = [];
+let priceSeries = null;
+let volSeries   = null;
+let indSeries   = {};
+let drawMode    = false;
+let drawStart   = null;
+let previewLine = null;
+const drawnLines = [];
+const COLORS = ['#f0b429','#a78bfa','#34d399','#fb7185','#60a5fa','#f97316'];
+
+// ── Тема ─────────────────────────────────────────────────
+let isLight = false;
+function themeLayout() {
+  return isLight
+    ? { background: { color: '#ffffff' }, textColor: '#1f2328' }
+    : { background: { color: '#0d1117' }, textColor: '#8b949e' };
+}
+function themeGrid() {
+  return isLight
+    ? { vertLines: { color: '#eaeef2' }, horzLines: { color: '#eaeef2' } }
+    : { vertLines: { color: '#21262d' }, horzLines: { color: '#21262d' } };
+}
+function themeBorder() { return isLight ? '#d0d7de' : '#30363d'; }
+
+function toggleTheme() {
+  isLight = !isLight;
+  document.body.classList.toggle('light', isLight);
+  charts.filter(Boolean).forEach(c => c.applyOptions({
+    layout: themeLayout(), grid: themeGrid(),
+    rightPriceScale: { borderColor: themeBorder() },
+    timeScale: { borderColor: themeBorder() },
+  }));
+}
+
+// ── Создание графика ──────────────────────────────────────
+function makeChart(el) {
+  return LightweightCharts.createChart(el, {
+    layout: themeLayout(), grid: themeGrid(),
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    rightPriceScale: { borderColor: themeBorder() },
+    timeScale: { borderColor: themeBorder(), timeVisible: true, secondsVisible: false },
+    handleScroll: true, handleScale: true,
+  });
+}
+
+function initCharts(showIndicator) {
+  // Удаляем старые графики
+  charts.forEach(c => c && c.remove());
+  charts = []; chartEls = [];
+
+  const priceEl = document.getElementById('chart-price');
+  const volEl   = document.getElementById('chart-volume');
+  const indEl   = document.getElementById('chart-indicator');
+
+  const pc = makeChart(priceEl);
+  const vc = makeChart(volEl);
+  charts  = [pc, vc];
+  chartEls = [priceEl, volEl];
+
+  if (showIndicator && !isOverlay) {
+    indEl.style.display = '';
+    const ic = makeChart(indEl);
+    charts.push(ic);
+    chartEls.push(indEl);
+  } else {
+    indEl.style.display = 'none';
+  }
+
+  // Синхронизация скролла
+  charts.filter(Boolean).forEach(src => {
+    src.timeScale().subscribeVisibleLogicalRangeChange(r => {
+      if (!r) return;
+      charts.filter(c => c && c !== src).forEach(c => c.timeScale().setVisibleLogicalRange(r));
+    });
+  });
+
+  return charts;
+}
+
+// ── Загрузка данных ───────────────────────────────────────
+async function loadChart() {
+  const ticker = document.getElementById('inp-ticker').value.trim().toUpperCase();
+  const metric = document.getElementById('inp-metric').value.trim();
+  const start  = document.getElementById('inp-start').value.trim();
+  const end    = document.getElementById('inp-end').value.trim();
+
+  if (!ticker) {
+    alert('Введите тикер');
+    return;
+  }
+
+  showLoading('Загружаю данные...');
+
+  try {
+    let params = new URLSearchParams();
+    if (start) params.set('start', start);
+    if (end)   params.set('end',   end);
+
+    let data;
+
+    if (metric) {
+      params.set('metric', metric);
+      const resp = await fetch(`${API}/api/indicator/${ticker}?${params}`);
+      if (!resp.ok) {
+        const err = await resp.json();
+        throw new Error(err.detail || 'Ошибка API');
+      }
+      data = await resp.json();
+    } else {
+      const resp = await fetch(`${API}/api/candles/${ticker}?${params}`);
+      if (!resp.ok) {
+        const err = await resp.json();
+        throw new Error(err.detail || 'Ошибка API');
+      }
+      data = await resp.json();
+      data.indicator = null;
+    }
+
+    renderChart(data, ticker, metric);
+
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+function quickLoad(ticker, metric) {
+  document.getElementById('inp-ticker').value = ticker;
+  document.getElementById('inp-metric').value = metric;
+  loadChart();
+}
+
+// ── Рендер графика ────────────────────────────────────────
+function renderChart(data, ticker, metric) {
+  allCandles = data.candles  || [];
+  allVolumes = data.volumes  || [];
+  indData    = data.indicator || {};
+  isOverlay  = data.is_overlay || false;
+
+  const hasIndicator = metric && Object.keys(indData).length > 0;
+  const [pc, vc, ic] = initCharts(hasIndicator);
+
+  // Price series
+  priceSeries = createPriceSeries(pc, 'candlestick');
+  priceSeries.setData(allCandles);
+  currentType = 'candlestick';
+
+  // Volume
+  volSeries = vc.addHistogramSeries({ priceScaleId: '' });
+  volSeries.priceScale().applyOptions({ scaleMargins: { top: 0.1, bottom: 0 } });
+  volSeries.setData(allVolumes);
+
+  // Indicator series
+  indSeries = {};
+  const indToggles = document.getElementById('ind-toggles');
+  const indSep     = document.getElementById('ind-sep');
+  indToggles.innerHTML = '';
+
+  if (hasIndicator) {
+    const targetChart = isOverlay ? pc : ic;
+    Object.entries(indData).forEach(([col, seriesData], i) => {
+      const s = targetChart.addLineSeries({
+        color: COLORS[i % COLORS.length], lineWidth: 2, title: col,
+        lastValueVisible: true, priceLineVisible: false,
+      });
+      s.setData(seriesData);
+      indSeries[col] = s;
+
+      // Кнопка переключения линии
+      const btn = document.createElement('button');
+      btn.className = 'btn active';
+      btn.style.borderLeft = `3px solid ${COLORS[i % COLORS.length]}`;
+      btn.textContent = col;
+      btn.onclick = () => {
+        const on = btn.classList.toggle('active');
+        s.applyOptions({ visible: on });
+      };
+      indToggles.appendChild(btn);
+    });
+
+    // Уровни RSI / Stoch
+    const indName = metric.split(' ')[0].toLowerCase();
+    if (indName === 'rsi' && Object.values(indSeries)[0]) {
+      const ref = Object.values(indSeries)[0];
+      addLevel(ic, ref, 70, '#ef5350', 'OB');
+      addLevel(ic, ref, 30, '#26a69a', 'OS');
+    } else if (indName === 'stoch' && Object.values(indSeries)[0]) {
+      const ref = Object.values(indSeries)[0];
+      addLevel(ic, ref, 80, '#ef5350', 'OB');
+      addLevel(ic, ref, 20, '#26a69a', 'OS');
+    }
+
+    indSep.style.display = '';
+  } else {
+    indSep.style.display = 'none';
+  }
+
+  // Tooltip
+  setupTooltip(pc);
+
+  // Drawing
+  setupDrawing(pc);
+
+  // Ticker info
+  updateTickerInfo(data, ticker, metric);
+
+  // Indicator last values
+  updateIndValues(data.last_values);
+
+  // Footer
+  document.getElementById('footer-period').textContent =
+    `${data.period_start} — ${data.period_end} · ${data.records} свечей`;
+
+  // Show UI
+  hideOverlay();
+  document.getElementById('ticker-info').classList.add('visible');
+  document.getElementById('toolbar').classList.add('visible');
+
+  // Resize
+  resizeAll();
+
+  // Reset type buttons
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.type-btn').classList.add('active');
+}
+
+function addLevel(chart, refSeries, value, color, title) {
+  if (!chart) return;
+  const s = chart.addLineSeries({
+    color, lineWidth: 1, lineStyle: 2, title,
+    lastValueVisible: false, priceLineVisible: false,
+  });
+  s.setData(refSeries.data().map(d => ({ time: d.time, value })));
+}
+
+// ── Ticker info ───────────────────────────────────────────
+function updateTickerInfo(data, ticker, metric) {
+  document.getElementById('ti-ticker').textContent = ticker;
+  const badge = document.getElementById('ti-badge');
+  if (metric) {
+    badge.innerHTML = `<span class="badge">${metric.toUpperCase()}</span>`;
+  } else {
+    badge.innerHTML = '';
+  }
+
+  const price  = data.current_price;
+  const change = data.change;
+  const pct    = data.change_pct;
+
+  if (price) {
+    document.getElementById('ti-price').textContent = `${price.toFixed(2)} ₽`;
+    const sign  = change >= 0 ? '+' : '';
+    const color = change >= 0 ? 'var(--green)' : 'var(--red)';
+    document.getElementById('ti-change').innerHTML =
+      `<span style="color:${color}">${sign}${change.toFixed(2)} ₽ (${sign}${pct.toFixed(2)}%)</span>`;
+  }
+  document.getElementById('ti-meta').textContent =
+    `${data.period_start} — ${data.period_end} · ${data.records} свечей`;
+}
+
+function updateIndValues(lastValues) {
+  const el = document.getElementById('ind-values');
+  if (!lastValues || Object.keys(lastValues).length === 0) {
+    el.classList.remove('visible');
+    return;
+  }
+  el.innerHTML = Object.entries(lastValues).map(([col, val], i) =>
+    `<div class="ind-val-item">
+      <div class="ind-val-dot" style="background:${COLORS[i % COLORS.length]}"></div>
+      <span class="ind-val-name">${col}</span>
+      <span class="ind-val-num">${val.toFixed(3)}</span>
+    </div>`
+  ).join('');
+  el.classList.add('visible');
+}
+
+// ── Тип графика ───────────────────────────────────────────
+function createPriceSeries(chart, type) {
+  switch (type) {
+    case 'line':
+      return chart.addLineSeries({ color: '#60a5fa', lineWidth: 2 });
+    case 'area':
+      return chart.addAreaSeries({
+        lineColor: '#60a5fa',
+        topColor: 'rgba(96,165,250,0.3)',
+        bottomColor: 'rgba(96,165,250,0)',
+      });
+    case 'bar':
+      return chart.addBarSeries({ upColor: '#26a69a', downColor: '#ef5350' });
+    default:
+      return chart.addCandlestickSeries({
+        upColor: '#26a69a', downColor: '#ef5350',
+        borderUpColor: '#26a69a', borderDownColor: '#ef5350',
+        wickUpColor:   '#26a69a', wickDownColor:   '#ef5350',
+      });
+  }
+}
+
+function setType(type, btn) {
+  if (!charts[0]) return;
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  charts[0].removeSeries(priceSeries);
+  priceSeries = createPriceSeries(charts[0], type);
+  currentType = type;
+  const flat = type === 'line' || type === 'area';
+  priceSeries.setData(flat ? allCandles.map(d => ({ time: d.time, value: d.close })) : allCandles);
+  setupTooltip(charts[0]);
+  setupDrawing(charts[0]);
+}
+
+// ── Период ────────────────────────────────────────────────
+function setPeriod(days, btn) {
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (!allCandles.length) return;
+  if (days === 0) {
+    charts.filter(Boolean).forEach(c => c.timeScale().fitContent());
+    return;
+  }
+  const to   = allCandles[allCandles.length - 1].time;
+  const from = to - days * 86400;
+  charts.filter(Boolean).forEach(c => c.timeScale().setVisibleRange({ from, to }));
+}
+
+// ── Объём ─────────────────────────────────────────────────
+function toggleVolume(btn) {
+  const volEl = document.getElementById('chart-volume');
+  const show  = volEl.style.display === 'none';
+  volEl.style.display = show ? '' : 'none';
+  btn.classList.toggle('active', show);
+  resizeAll();
+}
+
+// ── Tooltip ───────────────────────────────────────────────
+function setupTooltip(chart) {
+  const tooltip  = document.getElementById('tooltip');
+  const priceEl  = document.getElementById('chart-price');
+  chart.subscribeCrosshairMove(param => {
+    if (!param.time || !param.point) { tooltip.classList.remove('visible'); return; }
+    const c = param.seriesData.get(priceSeries);
+    if (!c) { tooltip.classList.remove('visible'); return; }
+    const date = new Date(param.time * 1000)
+      .toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' });
+    const val  = c.close ?? c.value;
+    const isUp = c.open !== undefined ? val >= c.open : true;
+    const cls  = isUp ? 'tt-up' : 'tt-down';
+    let html = `<div class="tt-date">${date}</div>`;
+    if (c.open !== undefined) {
+      html += `<div class="tt-row"><span class="tt-label">O</span><span class="${cls}">${c.open.toFixed(2)}</span></div>
+               <div class="tt-row"><span class="tt-label">H</span><span class="${cls}">${c.high.toFixed(2)}</span></div>
+               <div class="tt-row"><span class="tt-label">L</span><span class="${cls}">${c.low.toFixed(2)}</span></div>
+               <div class="tt-row"><span class="tt-label">C</span><span class="${cls}">${c.close.toFixed(2)}</span></div>`;
+    } else {
+      html += `<div class="tt-row"><span class="tt-label">Цена</span><span class="${cls}">${val.toFixed(2)}</span></div>`;
+    }
+    tooltip.innerHTML = html;
+    tooltip.classList.add('visible');
+    const rect = priceEl.getBoundingClientRect();
+    let x = rect.left + param.point.x + 16;
+    let y = rect.top  + param.point.y - 10;
+    if (x + 180 > window.innerWidth)  x = rect.left + param.point.x - 190;
+    if (y + 130 > window.innerHeight) y = window.innerHeight - 140;
+    tooltip.style.left = x + 'px';
+    tooltip.style.top  = y + 'px';
+  });
+}
+
+// ── Рисование линий ───────────────────────────────────────
+function setupDrawing(chart) {
+  const priceEl = document.getElementById('chart-price');
+  priceEl.addEventListener('click', e => {
+    if (!drawMode) return;
+    const pt = getPoint(e, chart, priceEl);
+    if (!pt) return;
+    if (!drawStart) {
+      drawStart = pt;
+      document.getElementById('draw-hint').textContent = '✏️ Кликните вторую точку';
+    } else {
+      if (previewLine) { chart.removeSeries(previewLine); previewLine = null; }
+      const p1 = drawStart.time <= pt.time ? drawStart : pt;
+      const p2 = drawStart.time <= pt.time ? pt : drawStart;
+      const line = chart.addLineSeries({
+        color: '#f0b429', lineWidth: 2, lineStyle: 0,
+        lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false,
+      });
+      line.setData([{ time: p1.time, value: p1.price }, { time: p2.time, value: p2.price }]);
+      drawnLines.push(line);
+      drawStart = null;
+      drawMode  = false;
+      priceEl.style.cursor = 'default';
+      document.getElementById('btn-draw').classList.remove('active');
+      document.getElementById('draw-hint').classList.remove('visible');
+    }
+  });
+
+  priceEl.addEventListener('mousemove', e => {
+    if (!drawMode || !drawStart) return;
+    const pt = getPoint(e, chart, priceEl);
+    if (!pt) return;
+    if (previewLine) chart.removeSeries(previewLine);
+    const p1 = drawStart.time <= pt.time ? drawStart : pt;
+    const p2 = drawStart.time <= pt.time ? pt : drawStart;
+    previewLine = chart.addLineSeries({
+      color: 'rgba(240,180,41,0.5)', lineWidth: 1, lineStyle: 1,
+      lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false,
+    });
+    previewLine.setData([{ time: p1.time, value: p1.price }, { time: p2.time, value: p2.price }]);
+  });
+}
+
+function getPoint(e, chart, el) {
+  const rect  = el.getBoundingClientRect();
+  const x     = e.clientX - rect.left;
+  const y     = e.clientY - rect.top;
+  const price = priceSeries.coordinateToPrice(y);
+  let time    = chart.timeScale().coordinateToTime(x);
+  if (time === null) {
+    const logical = chart.timeScale().coordinateToLogical(x);
+    if (logical === null) return null;
+    const idx = Math.max(0, Math.min(Math.round(logical), allCandles.length - 1));
+    time = allCandles[idx]?.time ?? null;
+  }
+  if (time === null || price === null) return null;
+  return { time, price };
+}
+
+function toggleDraw(btn) {
+  drawMode = btn.classList.toggle('active');
+  const priceEl = document.getElementById('chart-price');
+  priceEl.style.cursor = drawMode ? 'crosshair' : 'default';
+  const hint = document.getElementById('draw-hint');
+  if (drawMode) {
+    hint.textContent = '✏️ Кликните первую точку на графике';
+    hint.classList.add('visible');
+  } else {
+    hint.classList.remove('visible');
+    drawStart = null;
+    if (previewLine && charts[0]) { charts[0].removeSeries(previewLine); previewLine = null; }
+  }
+}
+
+function undoLine() {
+  const last = drawnLines.pop();
+  if (last && charts[0]) charts[0].removeSeries(last);
+}
+
+function clearLines() {
+  drawnLines.forEach(l => charts[0] && charts[0].removeSeries(l));
+  drawnLines.length = 0;
+}
+
+// ── Resize ────────────────────────────────────────────────
+function resizeAll() {
+  charts.filter(Boolean).forEach((c, i) => {
+    const el = chartEls[i];
+    if (el && el.clientHeight > 0) {
+      c.applyOptions({ width: el.clientWidth, height: el.clientHeight });
+    }
+  });
+}
+new ResizeObserver(resizeAll).observe(document.body);
+
+// ── Loading / Error / Clear ───────────────────────────────
+function showLoading(text) {
+  const ov = document.getElementById('overlay');
+  ov.innerHTML = `<div class="spinner"></div><div class="overlay-text">${text}</div>`;
+  ov.classList.remove('hidden');
+}
+function showError(msg) {
+  const ov = document.getElementById('overlay');
+  ov.innerHTML = `<div style="font-size:32px">❌</div><div class="error-msg">${msg}</div>`;
+  ov.classList.remove('hidden');
+}
+function hideOverlay() {
+  document.getElementById('overlay').classList.add('hidden');
+}
+function clearChart() {
+  document.getElementById('inp-ticker').value = '';
+  document.getElementById('inp-metric').value = '';
+  document.getElementById('inp-start').value  = '';
+  document.getElementById('inp-end').value    = '';
+  charts.forEach(c => c && c.remove());
+  charts = []; chartEls = [];
+  document.getElementById('ticker-info').classList.remove('visible');
+  document.getElementById('toolbar').classList.remove('visible');
+  document.getElementById('ind-values').classList.remove('visible');
+  document.getElementById('overlay').classList.remove('hidden');
+  document.getElementById('overlay').innerHTML =
+    '<div style="font-size:48px">📈</div><div class="overlay-text">Введите тикер и нажмите «Построить»</div>';
+}
+
+// ── Авто-подстановка разделителей в датах ─────────────────
+['inp-start','inp-end'].forEach(id => {
+  document.getElementById(id).addEventListener('input', e => {
+    let v = e.target.value.replace(/\D/g,'');
+    if (v.length >= 3) v = v.slice(0,2) + '.' + v.slice(2);
+    if (v.length >= 6) v = v.slice(0,5) + '.' + v.slice(5);
+    e.target.value = v.slice(0,10);
+  });
+});
+</script>
+</body>
+</html>
