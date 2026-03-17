@@ -204,10 +204,12 @@ body {
 
 <!-- HEADER -->
 <div class="header">
-  <div class="logo">📈 MOEX <span>Анализатор</span></div>
-  <div style="display:flex;gap:6px;align-items:center">
+<div class="logo">📈 MOEX <span>Анализатор</span></div>
+<div style="display:flex;gap:6px;align-items:center">
+    <a href="https://t.me/moex_indicatorsbot" target="_blank" class="btn" style="text-decoration:none">✈️ Telegram бот</a>
     <button class="btn icon" onclick="toggleTheme()" title="Тема">🌗</button>
-  </div>
+    
+</div>
 </div>
 
 <!-- SEARCH BAR -->
@@ -342,7 +344,7 @@ function makeChart(el) {
     layout: themeLayout(), grid: themeGrid(),
     crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
     rightPriceScale: { borderColor: themeBorder() },
-    timeScale: { borderColor: themeBorder(), timeVisible: true, secondsVisible: false },
+    timeScale: { borderColor: themeBorder(), timeVisible: false },
     handleScroll: true, handleScale: true,
   });
 }
