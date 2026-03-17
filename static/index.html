@@ -9,7 +9,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:    #0d1117; --bg2: #161b22; --bg3: #21262d;
+  --bg: #0d1117; --bg2: #161b22; --bg3: #21262d;
   --border: #30363d; --text: #e6edf3; --text2: #8b949e; --text3: #484f58;
   --blue: #1f6feb; --green: #26a69a; --red: #ef5350;
   --btn-bg: #21262d; --btn-hover: #30363d;
@@ -30,7 +30,6 @@ body {
   transition: background .2s, color .2s;
 }
 
-/* ── HEADER ── */
 .header {
   padding: 14px 24px;
   background: var(--bg2);
@@ -41,9 +40,8 @@ body {
 .logo { font-size: 20px; font-weight: 700; color: var(--text); }
 .logo span { color: var(--blue); }
 
-/* ── SEARCH BAR ── */
 .search-bar {
-  padding: 16px 24px;
+  padding: 12px 24px;
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
   display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
@@ -59,12 +57,12 @@ body {
   transition: border-color .15s;
 }
 .input:focus { border-color: var(--blue); }
-.input-ticker { width: 120px; text-transform: uppercase; }
-.input-metric { width: 200px; }
-.input-date   { width: 130px; }
+.input-ticker { width: 100px; text-transform: uppercase; }
+.input-metric { width: 180px; }
+.input-date   { width: 120px; }
 
 .btn {
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--btn-bg);
@@ -73,6 +71,8 @@ body {
   cursor: pointer;
   transition: background .15s, color .15s;
   white-space: nowrap;
+  text-decoration: none;
+  display: inline-flex; align-items: center;
 }
 .btn:hover  { background: var(--btn-hover); color: var(--text); }
 .btn.primary { background: var(--blue); color: #fff; border-color: transparent; }
@@ -80,7 +80,6 @@ body {
 .btn.active { background: var(--btn-active); color: var(--btn-active-text); border-color: transparent; }
 .btn.icon   { padding: 8px 10px; }
 
-/* ── TICKER INFO ── */
 .ticker-info {
   padding: 12px 24px;
   background: var(--bg2);
@@ -97,9 +96,8 @@ body {
   padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
 }
 
-/* ── TOOLBAR ── */
 .toolbar {
-  padding: 8px 24px;
+  padding: 6px 24px;
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
   display: none; align-items: center; flex-wrap: wrap; gap: 6px;
@@ -107,18 +105,17 @@ body {
 .toolbar.visible { display: flex; }
 .toolbar-group { display: flex; gap: 3px; align-items: center; }
 .toolbar-sep   { width: 1px; height: 20px; background: var(--border); margin: 0 6px; }
-.toolbar-label { font-size: 11px; color: var(--text2); margin-right: 2px; }
+.toolbar-label { font-size: 11px; color: var(--text2); margin-right: 2px; white-space: nowrap; }
+.toolbar .btn  { padding: 4px 10px; font-size: 12px; }
 
-/* ── CHARTS AREA ── */
 .charts-area {
   flex: 1; display: flex; flex-direction: column;
   position: relative; min-height: 0;
 }
 #chart-price     { flex: 3; min-height: 300px; }
-#chart-volume    { flex: 1; min-height: 80px;  border-top: 1px solid var(--border); }
+#chart-volume    { flex: 1; min-height: 80px; border-top: 1px solid var(--border); }
 #chart-indicator { min-height: 150px; border-top: 1px solid var(--border); display: none; }
 
-/* ── LOADING / ERROR ── */
 .overlay {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
@@ -136,7 +133,6 @@ body {
 .overlay-text { font-size: 14px; color: var(--text2); }
 .error-msg { color: var(--red); font-size: 14px; text-align: center; max-width: 400px; }
 
-/* ── TOOLTIP ── */
 #tooltip {
   position: fixed; top: 0; left: 0;
   background: var(--bg2); border: 1px solid var(--border);
@@ -152,7 +148,6 @@ body {
 #tooltip .tt-up    { color: var(--green); font-weight: 600; }
 #tooltip .tt-down  { color: var(--red);   font-weight: 600; }
 
-/* ── FOOTER ── */
 .footer {
   padding: 8px 24px;
   background: var(--bg2);
@@ -160,7 +155,6 @@ body {
   font-size: 11px; color: var(--text3); text-align: center;
 }
 
-/* ── INDICATOR VALUES ── */
 .ind-values {
   padding: 6px 24px;
   background: var(--bg2);
@@ -169,16 +163,16 @@ body {
 }
 .ind-values.visible { display: flex; }
 .ind-val-item { display: flex; gap: 6px; align-items: center; }
-.ind-val-dot  { width: 8px; height: 8px; border-radius: 50%; }
+.ind-val-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .ind-val-name { color: var(--text2); }
 .ind-val-num  { font-weight: 600; }
 
-/* ── QUICK EXAMPLES ── */
 .examples {
-  padding: 8px 24px;
+  padding: 6px 24px;
   display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+  background: var(--bg2); border-bottom: 1px solid var(--border);
 }
-.examples-label { font-size: 12px; color: var(--text2); margin-right: 4px; }
+.examples-label { font-size: 12px; color: var(--text2); margin-right: 4px; white-space: nowrap; }
 .example-btn {
   padding: 3px 10px;
   border-radius: 20px;
@@ -187,10 +181,10 @@ body {
   color: var(--text2);
   font-size: 12px;
   cursor: pointer;
+  white-space: nowrap;
 }
 .example-btn:hover { background: var(--btn-hover); color: var(--text); }
 
-/* ── DRAWING ── */
 .draw-hint {
   position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
   background: rgba(31,107,235,0.9); color: #fff;
@@ -198,18 +192,30 @@ body {
   pointer-events: none; display: none; z-index: 20;
 }
 .draw-hint.visible { display: block; }
+
+/* ── Мобильная адаптация ── */
+@media (max-width: 600px) {
+  .search-bar { flex-direction: column; align-items: stretch; }
+  .input-ticker, .input-metric, .input-date { width: 100%; }
+  .examples { overflow-x: auto; flex-wrap: nowrap; }
+  .toolbar  { overflow-x: auto; flex-wrap: nowrap; }
+  .header   { flex-direction: column; align-items: flex-start; }
+  #chart-price     { min-height: 220px; }
+  #chart-volume    { min-height: 60px; }
+  #chart-indicator { min-height: 120px; }
+}
 </style>
 </head>
 <body>
 
 <!-- HEADER -->
 <div class="header">
-<div class="logo">📈 MOEX <span>Анализатор</span></div>
-<div style="display:flex;gap:6px;align-items:center">
-    <a href="https://t.me/moex_indicatorsbot" target="_blank" class="btn" style="text-decoration:none">✈️ Telegram бот</a>
+  <div class="logo">📈 MOEX <span>Анализатор</span></div>
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+    <a href="https://t.me/ИМЯ_ВАШЕГО_БОТА" target="_blank" class="btn" style="text-decoration:none">✈️ Telegram бот</a>
     <button class="btn icon" onclick="toggleTheme()" title="Тема">🌗</button>
-    
-</div>
+    <a href="/docs" target="_blank" class="btn" style="text-decoration:none">📖 API</a>
+  </div>
 </div>
 
 <!-- SEARCH BAR -->
@@ -222,6 +228,11 @@ body {
   <input class="input input-date" id="inp-end"   placeholder="31.12.2024" maxlength="10">
   <button class="btn primary" onclick="loadChart()">📊 Построить</button>
   <button class="btn" onclick="clearChart()">✕ Сброс</button>
+  <div id="export-btns" style="display:none;gap:6px;flex-wrap:wrap">
+    <button class="btn" onclick="exportCSV()">📥 CSV</button>
+    <button class="btn" onclick="exportExcel()">📊 Excel</button>
+    <button class="btn" onclick="exportPDF()">📄 PDF</button>
+  </div>
 </div>
 
 <!-- QUICK EXAMPLES -->
@@ -295,26 +306,28 @@ body {
 <div class="footer">Данные Московской биржи (MOEX ISS) · <span id="footer-period"></span></div>
 
 <script>
-const API = '';  // пустая строка = тот же хост
+const API = '';
 
-// ── Состояние ────────────────────────────────────────────
-let allCandles  = [];
-let allVolumes  = [];
-let indData     = {};
-let isOverlay   = false;
-let currentType = 'candlestick';
-let charts      = [];
-let chartEls    = [];
-let priceSeries = null;
-let volSeries   = null;
-let indSeries   = {};
-let drawMode    = false;
-let drawStart   = null;
-let previewLine = null;
+// ── Состояние ─────────────────────────────────────────────
+let allCandles   = [];
+let allVolumes   = [];
+let indData      = {};
+let isOverlay    = false;
+let currentType  = 'candlestick';
+let charts       = [];
+let chartEls     = [];
+let priceSeries  = null;
+let volSeries    = null;
+let indSeries    = {};
+let drawMode     = false;
+let drawStart    = null;
+let previewLine  = null;
+let lastData     = null;
+let currentTicker = '';
 const drawnLines = [];
 const COLORS = ['#f0b429','#a78bfa','#34d399','#fb7185','#60a5fa','#f97316'];
 
-// ── Тема ─────────────────────────────────────────────────
+// ── Тема ──────────────────────────────────────────────────
 let isLight = false;
 function themeLayout() {
   return isLight
@@ -350,7 +363,6 @@ function makeChart(el) {
 }
 
 function initCharts(showIndicator) {
-  // Удаляем старые графики
   charts.forEach(c => c && c.remove());
   charts = []; chartEls = [];
 
@@ -360,7 +372,7 @@ function initCharts(showIndicator) {
 
   const pc = makeChart(priceEl);
   const vc = makeChart(volEl);
-  charts  = [pc, vc];
+  charts   = [pc, vc];
   chartEls = [priceEl, volEl];
 
   if (showIndicator && !isOverlay) {
@@ -372,7 +384,6 @@ function initCharts(showIndicator) {
     indEl.style.display = 'none';
   }
 
-  // Синхронизация скролла
   charts.filter(Boolean).forEach(src => {
     src.timeScale().subscribeVisibleLogicalRangeChange(r => {
       if (!r) return;
@@ -390,10 +401,7 @@ async function loadChart() {
   const start  = document.getElementById('inp-start').value.trim();
   const end    = document.getElementById('inp-end').value.trim();
 
-  if (!ticker) {
-    alert('Введите тикер');
-    return;
-  }
+  if (!ticker) { alert('Введите тикер'); return; }
 
   showLoading('Загружаю данные...');
 
@@ -403,27 +411,19 @@ async function loadChart() {
     if (end)   params.set('end',   end);
 
     let data;
-
     if (metric) {
       params.set('metric', metric);
       const resp = await fetch(`${API}/api/indicator/${ticker}?${params}`);
-      if (!resp.ok) {
-        const err = await resp.json();
-        throw new Error(err.detail || 'Ошибка API');
-      }
+      if (!resp.ok) { const err = await resp.json(); throw new Error(err.detail || 'Ошибка API'); }
       data = await resp.json();
     } else {
       const resp = await fetch(`${API}/api/candles/${ticker}?${params}`);
-      if (!resp.ok) {
-        const err = await resp.json();
-        throw new Error(err.detail || 'Ошибка API');
-      }
+      if (!resp.ok) { const err = await resp.json(); throw new Error(err.detail || 'Ошибка API'); }
       data = await resp.json();
       data.indicator = null;
     }
 
     renderChart(data, ticker, metric);
-
   } catch (e) {
     showError(e.message);
   }
@@ -437,8 +437,8 @@ function quickLoad(ticker, metric) {
 
 // ── Рендер графика ────────────────────────────────────────
 function renderChart(data, ticker, metric) {
-  allCandles = data.candles  || [];
-  allVolumes = data.volumes  || [];
+  allCandles = data.candles   || [];
+  allVolumes = data.volumes   || [];
   indData    = data.indicator || {};
   isOverlay  = data.is_overlay || false;
 
@@ -463,7 +463,9 @@ function renderChart(data, ticker, metric) {
 
   if (hasIndicator) {
     const targetChart = isOverlay ? pc : ic;
-    Object.entries(indData).forEach(([col, seriesData], i) => {
+    const indEntries  = Object.entries(indData);
+
+    indEntries.forEach(([col, seriesData], i) => {
       const s = targetChart.addLineSeries({
         color: COLORS[i % COLORS.length], lineWidth: 2, title: col,
         lastValueVisible: true, priceLineVisible: false,
@@ -471,62 +473,63 @@ function renderChart(data, ticker, metric) {
       s.setData(seriesData);
       indSeries[col] = s;
 
-      // Кнопка переключения линии
-      const btn = document.createElement('button');
-      btn.className = 'btn active';
-      btn.style.borderLeft = `3px solid ${COLORS[i % COLORS.length]}`;
-      btn.textContent = col;
-      btn.onclick = () => {
-        const on = btn.classList.toggle('active');
-        s.applyOptions({ visible: on });
-      };
-      indToggles.appendChild(btn);
+      // Кнопки только если линий больше одной
+      if (indEntries.length > 1) {
+        if (i === 0) {
+          const label = document.createElement('span');
+          label.className = 'toolbar-label';
+          label.textContent = 'Линии:';
+          indToggles.appendChild(label);
+        }
+        const btn = document.createElement('button');
+        btn.className = 'btn active';
+        btn.style.borderLeft = `3px solid ${COLORS[i % COLORS.length]}`;
+        btn.textContent = col;
+        btn.onclick = () => {
+          const on = btn.classList.toggle('active');
+          s.applyOptions({ visible: on });
+        };
+        indToggles.appendChild(btn);
+      }
     });
 
     // Уровни RSI / Stoch
     const indName = metric.split(' ')[0].toLowerCase();
     if (indName === 'rsi' && Object.values(indSeries)[0]) {
       const ref = Object.values(indSeries)[0];
-      addLevel(ic, ref, 70, '#ef5350', 'OB');
-      addLevel(ic, ref, 30, '#26a69a', 'OS');
+      addLevel(ic, ref, 70, '#ef5350', 'OB 70');
+      addLevel(ic, ref, 30, '#26a69a', 'OS 30');
     } else if (indName === 'stoch' && Object.values(indSeries)[0]) {
       const ref = Object.values(indSeries)[0];
-      addLevel(ic, ref, 80, '#ef5350', 'OB');
-      addLevel(ic, ref, 20, '#26a69a', 'OS');
+      addLevel(ic, ref, 80, '#ef5350', 'OB 80');
+      addLevel(ic, ref, 20, '#26a69a', 'OS 20');
     }
 
-    indSep.style.display = '';
+    indSep.style.display = indEntries.length > 1 ? '' : 'none';
   } else {
     indSep.style.display = 'none';
   }
 
-  // Tooltip
   setupTooltip(pc);
-
-  // Drawing
   setupDrawing(pc);
-
-  // Ticker info
   updateTickerInfo(data, ticker, metric);
-
-  // Indicator last values
   updateIndValues(data.last_values);
 
-  // Footer
   document.getElementById('footer-period').textContent =
     `${data.period_start} — ${data.period_end} · ${data.records} свечей`;
 
-  // Show UI
   hideOverlay();
   document.getElementById('ticker-info').classList.add('visible');
   document.getElementById('toolbar').classList.add('visible');
 
-  // Resize
   resizeAll();
 
-  // Reset type buttons
   document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.type-btn').classList.add('active');
+
+  lastData = data;
+  currentTicker = ticker;
+  showExportBtns();
 }
 
 function addLevel(chart, refSeries, value, color, title) {
@@ -542,11 +545,7 @@ function addLevel(chart, refSeries, value, color, title) {
 function updateTickerInfo(data, ticker, metric) {
   document.getElementById('ti-ticker').textContent = ticker;
   const badge = document.getElementById('ti-badge');
-  if (metric) {
-    badge.innerHTML = `<span class="badge">${metric.toUpperCase()}</span>`;
-  } else {
-    badge.innerHTML = '';
-  }
+  badge.innerHTML = metric ? `<span class="badge">${metric.toUpperCase()}</span>` : '';
 
   const price  = data.current_price;
   const change = data.change;
@@ -566,8 +565,7 @@ function updateTickerInfo(data, ticker, metric) {
 function updateIndValues(lastValues) {
   const el = document.getElementById('ind-values');
   if (!lastValues || Object.keys(lastValues).length === 0) {
-    el.classList.remove('visible');
-    return;
+    el.classList.remove('visible'); return;
   }
   el.innerHTML = Object.entries(lastValues).map(([col, val], i) =>
     `<div class="ind-val-item">
@@ -623,9 +621,12 @@ function setPeriod(days, btn) {
     charts.filter(Boolean).forEach(c => c.timeScale().fitContent());
     return;
   }
-  const to   = allCandles[allCandles.length - 1].time;
-  const from = to - days * 86400;
-  charts.filter(Boolean).forEach(c => c.timeScale().setVisibleRange({ from, to }));
+  const lastCandle = allCandles[allCandles.length - 1];
+  const lastTime = typeof lastCandle.time === 'string'
+    ? new Date(lastCandle.time).getTime() / 1000
+    : lastCandle.time;
+  const from = lastTime - days * 86400;
+  charts.filter(Boolean).forEach(c => c.timeScale().setVisibleRange({ from, to: lastTime }));
 }
 
 // ── Объём ─────────────────────────────────────────────────
@@ -639,18 +640,26 @@ function toggleVolume(btn) {
 
 // ── Tooltip ───────────────────────────────────────────────
 function setupTooltip(chart) {
-  const tooltip  = document.getElementById('tooltip');
-  const priceEl  = document.getElementById('chart-price');
+  const tooltip = document.getElementById('tooltip');
+  const priceEl = document.getElementById('chart-price');
   chart.subscribeCrosshairMove(param => {
     if (!param.time || !param.point) { tooltip.classList.remove('visible'); return; }
     const c = param.seriesData.get(priceSeries);
     if (!c) { tooltip.classList.remove('visible'); return; }
-    const date = new Date(param.time * 1000)
-      .toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' });
+
+    let dateStr = '';
+    if (typeof param.time === 'string') {
+      const [y, m, d] = param.time.split('-');
+      dateStr = `${d}.${m}.${y}`;
+    } else {
+      dateStr = new Date(param.time * 1000)
+        .toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' });
+    }
+
     const val  = c.close ?? c.value;
     const isUp = c.open !== undefined ? val >= c.open : true;
     const cls  = isUp ? 'tt-up' : 'tt-down';
-    let html = `<div class="tt-date">${date}</div>`;
+    let html = `<div class="tt-date">${dateStr}</div>`;
     if (c.open !== undefined) {
       html += `<div class="tt-row"><span class="tt-label">O</span><span class="${cls}">${c.open.toFixed(2)}</span></div>
                <div class="tt-row"><span class="tt-label">H</span><span class="${cls}">${c.high.toFixed(2)}</span></div>
@@ -790,9 +799,106 @@ function clearChart() {
   document.getElementById('ticker-info').classList.remove('visible');
   document.getElementById('toolbar').classList.remove('visible');
   document.getElementById('ind-values').classList.remove('visible');
-  document.getElementById('overlay').classList.remove('hidden');
-  document.getElementById('overlay').innerHTML =
-    '<div style="font-size:48px">📈</div><div class="overlay-text">Введите тикер и нажмите «Построить»</div>';
+  document.getElementById('export-btns').style.display = 'none';
+  const ov = document.getElementById('overlay');
+  ov.classList.remove('hidden');
+  ov.innerHTML = '<div style="font-size:48px">📈</div><div class="overlay-text">Введите тикер и нажмите «Построить»</div>';
+}
+
+// ── Экспорт ───────────────────────────────────────────────
+function showExportBtns() {
+  document.getElementById('export-btns').style.display = 'flex';
+}
+
+function getTableRows() {
+  if (!lastData) return [];
+  const rows    = [];
+  const candles = lastData.candles || [];
+  const indCols = Object.keys(lastData.indicator || {});
+
+  candles.forEach(c => {
+    let dateStr = '';
+    if (typeof c.time === 'string') {
+      const [y, m, d] = c.time.split('-');
+      dateStr = `${d}.${m}.${y}`;
+    } else {
+      dateStr = new Date(c.time * 1000).toLocaleDateString('ru-RU');
+    }
+    const row = { Дата: dateStr, Open: c.open, High: c.high, Low: c.low, Close: c.close };
+    indCols.forEach(col => {
+      const point = (lastData.indicator[col] || []).find(p => p.time === c.time);
+      row[col] = point ? point.value : '';
+    });
+    rows.push(row);
+  });
+  return rows;
+}
+
+function exportCSV() {
+  const rows = getTableRows();
+  if (!rows.length) return;
+  const headers = Object.keys(rows[0]);
+  const csv = [
+    headers.join(','),
+    ...rows.map(r => headers.map(h => r[h]).join(','))
+  ].join('\n');
+  downloadBlob(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }), `${currentTicker}_data.csv`);
+}
+
+function exportExcel() {
+  const rows = getTableRows();
+  if (!rows.length) return;
+  const headers = Object.keys(rows[0]);
+  const xmlRows = [
+    `<Row>${headers.map(h => `<Cell><Data ss:Type="String">${h}</Data></Cell>`).join('')}</Row>`,
+    ...rows.map(r =>
+      `<Row>${headers.map(h => {
+        const v = r[h];
+        const type = (h === 'Дата' || v === '') ? 'String' : 'Number';
+        return `<Cell><Data ss:Type="${type}">${v}</Data></Cell>`;
+      }).join('')}</Row>`
+    )
+  ].join('');
+  const xml = `<?xml version="1.0"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="Data"><Table>${xmlRows}</Table></Worksheet>
+</Workbook>`;
+  downloadBlob(new Blob([xml], { type: 'application/vnd.ms-excel' }), `${currentTicker}_data.xls`);
+}
+
+function exportPDF() {
+  const rows = getTableRows();
+  if (!rows.length) return;
+  const headers = Object.keys(rows[0]);
+  const html = `<html><head><meta charset="UTF-8"><title>${currentTicker}</title>
+  <style>
+    body { font-family: sans-serif; font-size: 11px; padding: 20px; }
+    h2 { margin-bottom: 12px; }
+    table { border-collapse: collapse; width: 100%; }
+    th { background: #1f6feb; color: #fff; padding: 6px 10px; text-align: left; }
+    td { padding: 4px 10px; border-bottom: 1px solid #eee; }
+    tr:nth-child(even) td { background: #f8f8f8; }
+  </style></head>
+  <body>
+    <h2>${currentTicker} · ${lastData.period_start} — ${lastData.period_end}</h2>
+    <table>
+      <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(r => `<tr>${headers.map(h => `<td>${r[h]}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table>
+  </body></html>`;
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 500);
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ── Авто-подстановка разделителей в датах ─────────────────
