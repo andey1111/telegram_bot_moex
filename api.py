@@ -116,6 +116,30 @@ def df_to_volumes(df: pd.DataFrame) -> list:
         })
     return result
 
+def resample_candles(candles: list, rule: str) -> list:
+    """Агрегирует дневные свечи в недельные или месячные."""
+    df = pd.DataFrame(candles)
+    df['time'] = pd.to_datetime(df['time'], unit='s')
+    df.set_index('time', inplace=True)
+    
+    resampled = df.resample(rule).agg({
+        'open':  'first',
+        'high':  'max',
+        'low':   'min',
+        'close': 'last',
+    }).dropna()
+    
+    result = []
+    for ts, row in resampled.iterrows():
+        result.append({
+            "time":  ts.strftime("%Y-%m-%d"),
+            "open":  round(float(row['open']),  2),
+            "high":  round(float(row['high']),  2),
+            "low":   round(float(row['low']),   2),
+            "close": round(float(row['close']), 2),
+        })
+    return result
+
 
 def df_to_indicator(indicator_df: pd.DataFrame) -> dict:
     """Конвертирует DataFrame индикатора в словарь серий."""
@@ -161,6 +185,7 @@ async def get_price(ticker: str):
 @app.get("/api/candles/{ticker}")
 async def get_candles(
     ticker: str,
+    timeframe: str = Query("D", description="D, W, M"),
     start: Optional[str] = Query(None, description="Дата начала DD.MM.YYYY"),
     end:   Optional[str] = Query(None, description="Дата окончания DD.MM.YYYY"),
 ):
@@ -179,17 +204,24 @@ async def get_candles(
     change = float(df["Close"].iloc[-1] - df["Close"].iloc[0])
     change_pct = (float(df["Close"].iloc[-1]) / float(df["Close"].iloc[0]) - 1) * 100
 
+    candles = df_to_candles(df)
+    
+    if timeframe == "W":
+        candles = resample_candles(candles, "W")
+    elif timeframe == "M":
+        candles = resample_candles(candles, "ME")
+
     return {
         "ticker":        ticker,
-        "candles":       df_to_candles(df),
+        "candles":       candles,  
         "volumes":       df_to_volumes(df),
         "current_price": current_price,
         "change":        round(change, 2),
         "change_pct":    round(change_pct, 2),
         "period_start":  df.index[0].strftime("%d.%m.%Y"),
         "period_end":    df.index[-1].strftime("%d.%m.%Y"),
-        "records":       len(df),
-    }
+        "records":       len(candles),  
+}
 
 
 @app.get("/api/indicator/{ticker}")

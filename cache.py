@@ -143,26 +143,58 @@ async def _save_candles_to_db(ticker: str, df: pd.DataFrame):
         await db.commit()
 
 
+
 def _fetch_moex(ticker: str, start: str, end: str) -> Optional[pd.DataFrame]:
-    # запрашиваю данные у московской биржи через их апи
-    # это синхронная функция — запускаю её через executor чтобы не блокировать бота
+    """Загружает все свечи постранично — MOEX отдаёт максимум 500 записей за раз."""
     try:
+        all_data = []
+        
         with requests.Session() as session:
-            data = apimoex.get_board_history(
-                session=session,
-                security=ticker.upper(),
-                board="TQBR",
-                start=start,
-                end=end,
-                columns=("OPEN", "HIGH", "LOW", "CLOSE", "VOLUME", "TRADEDATE")
-            )
-        if not data:
+            while True:
+                data = apimoex.get_board_history(
+                    session=session,
+                    security=ticker.upper(),
+                    board="TQBR",
+                    start=start,
+                    end=end,
+                    columns=("OPEN", "HIGH", "LOW", "CLOSE", "VOLUME", "TRADEDATE")
+                )
+                
+                # если данных нет — выходим из цикла
+                if not data:
+                    break
+                
+                all_data.extend(data)
+                logger.info(f"📦 {ticker}: загружено {len(all_data)} свечей...")
+                
+                # если вернулось меньше 500 — это последняя порция
+                if len(data) < 500:
+                    break
+                
+                # сдвигаем start на следующий день после последней свечи
+                last_date = data[-1]["TRADEDATE"]
+                last_dt = datetime.strptime(last_date, "%Y-%m-%d")
+                next_dt = last_dt + timedelta(days=1)
+                start = next_dt.strftime("%Y-%m-%d")
+                
+                # если следующая дата уже после end — выходим
+                if start > end:
+                    break
+        
+        if not all_data:
             return None
-        df = pd.DataFrame(data)
+        
+        df = pd.DataFrame(all_data)
         df["TRADEDATE"] = pd.to_datetime(df["TRADEDATE"])
         df.set_index("TRADEDATE", inplace=True)
         df.columns = ["Open", "High", "Low", "Close", "Volume"]
+        
+        # убираем дубликаты на случай если даты пересеклись
+        df = df[~df.index.duplicated(keep='last')]
+        df = df.sort_index()
+        
         return df[["Open", "High", "Low", "Close", "Volume"]]
+        
     except Exception as e:
         logger.error(f"Ошибка MOEX запроса {ticker}: {e}")
         return None
@@ -206,8 +238,8 @@ async def get_candles_cached(
             fetch_start = (cached_df.index[-1] + timedelta(days=1)).strftime("%Y-%m-%d")
         else:
             # кэша нет вообще — загружаю данные за 2 года
-            fetch_start = (date.today() - timedelta(days=730)).isoformat()
-
+            fetch_start = "1990-01-01"
+            
         fetch_end = today
         logger.info(f"🔄 Обновляем кэш {ticker}: {fetch_start} → {fetch_end}")
 
