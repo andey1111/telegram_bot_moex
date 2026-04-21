@@ -182,6 +182,7 @@ async def deactivate_alert(alert_id: int):
 
 
 def create_price_chart(ticker: str, df: pd.DataFrame) -> io.BytesIO:
+    #основная функция для создания PNG графиков 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), gridspec_kw={'height_ratios': [3, 1]})
 
     ax1.plot(df.index, df['Close'], label='Цена закрытия', linewidth=2, color='blue', alpha=0.7)
@@ -210,6 +211,7 @@ def create_price_chart(ticker: str, df: pd.DataFrame) -> io.BytesIO:
     return buf
 
 def create_indicator_chart(ticker: str, price_df: pd.DataFrame, indicator_df: pd.DataFrame, indicator_name: str) -> io.BytesIO:
+
     fig, axes = plt.subplots(2, 1, figsize=(12, 8))
 
     # Выравниваем индексы — берём только общие даты
@@ -678,7 +680,7 @@ async def handle_main_menu_button(message: Message, state: FSMContext):
 async def cmd_calc(message: Message, state: FSMContext):
     await state.set_state(IndicatorForm.ticker)
     await message.answer(
-        "📊 <b>Введи тикер акции</b>\n\nПримеры: SBER, GAZP, YNDX, VTBR, ROSN",
+        "📊 <b>Введи тикер акции</b>\n\nПримеры: SBER, GAZP, YDEX, VTBR, ROSN",
         parse_mode="HTML",
         reply_markup=ReplyKeyboardRemove()
     )
@@ -1069,7 +1071,7 @@ async def cmd_alert(message: Message, state: FSMContext):
     await message.answer(
         f"🔔 <b>Создание алерта</b>\n\n"
         f"📊 Активных алертов: <b>{count}/{MAX_ALERTS_PER_USER}</b>\n\n"
-        f"📈 Введи тикер для отслеживания:\nПример: SBER, GAZP, YNDX",
+        f"📈 Введи тикер для отслеживания:\nПример: SBER, GAZP, YDEX",
         parse_mode="HTML",
         reply_markup=ReplyKeyboardRemove()
     )
@@ -1697,9 +1699,7 @@ async def main():
             )
         except asyncio.CancelledError:
             break
-        except Exception as e:
-            logger.error(f"Ошибка polling: {e}, перезапуск через 5 секунд...")
-            await asyncio.sleep(5)
+        
     
     alert_task.cancel()
     try:
@@ -1714,9 +1714,8 @@ async def main():
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        logger.info("🛑 Остановлено пользователем")
+    
+    asyncio.run(main())
+    
 
 
